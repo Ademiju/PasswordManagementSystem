@@ -1,7 +1,6 @@
 package africa.semicolon.PasswordManager.services;
 
 import africa.semicolon.PasswordManager.datas.models.Url;
-import africa.semicolon.PasswordManager.datas.models.User;
 import africa.semicolon.PasswordManager.datas.repositories.UrlRepository;
 import africa.semicolon.PasswordManager.datas.repositories.UserRepository;
 import africa.semicolon.PasswordManager.dtos.requests.AccountRequest;
@@ -10,6 +9,7 @@ import africa.semicolon.PasswordManager.dtos.requests.UrlRequest;
 import africa.semicolon.PasswordManager.dtos.responses.UrlResponse;
 import africa.semicolon.PasswordManager.dtos.responses.UserResponse;
 import africa.semicolon.PasswordManager.exceptions.IncorrectDetailsException;
+import africa.semicolon.PasswordManager.exceptions.UrlDoesNotExistException;
 import africa.semicolon.PasswordManager.exceptions.UserNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,7 +73,7 @@ class UrlServiceImplTest {
     public void userCanAdd_UrlDetailsWhenLoggedInTest() {
         UserResponse userResponse = userService.createNewUserAccount(firstRequest);
         LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        userService.login(login);
+        userService.userLogin(login);
         UrlResponse urlResponse = urlService.addNewUrl(firstUrlRequest, userResponse.getUsername());
         assertNotNull(urlResponse);
         assertThat(urlResponse.getUrlAddress(), is(firstUrlRequest.getUrlAddress()));
@@ -92,7 +92,7 @@ class UrlServiceImplTest {
     public void add_UrlDetails_WithUsernameThatDoesNotExist_ThrowsExceptionTest() {
         userService.createNewUserAccount(firstRequest);
         LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        userService.login(login);
+        userService.userLogin(login);
         assertThatThrownBy(() -> urlService.addNewUrl(firstUrlRequest, "Increase")).isInstanceOf(UserNotFoundException.class).hasMessage("User with this Username does not exist");
 
     }
@@ -105,9 +105,9 @@ class UrlServiceImplTest {
         String secondUserUsername = secondUserResponse.getUsername();
 
         LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        userService.login(login);
+        userService.userLogin(login);
         LoginRequest login2 = LoginRequest.builder().userName("Juwon").password("Ademiju1#").build();
-        userService.login(login2);
+        userService.userLogin(login2);
         UrlResponse firstUrlResponse = urlService.addNewUrl(firstUrlRequest, firstUserUsername);
         UrlResponse secondUrlResponse = urlService.addNewUrl(secondUrlRequest,firstUserUsername);
         UrlResponse thirdUrlResponse = urlService.addNewUrl(thirdUrlRequest,firstUserUsername);
@@ -130,27 +130,35 @@ class UrlServiceImplTest {
         String secondUserUsername = secondUserResponse.getUsername();
 
         LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        userService.login(login);
+        userService.userLogin(login);
 
         LoginRequest login2 = LoginRequest.builder().userName("Juwon").password("Ademiju1#").build();
-        userService.login(login2);
+        userService.userLogin(login2);
 
-         urlService.addNewUrl(firstUrlRequest, userResponse.getUsername());
-         urlService.addNewUrl(secondUrlRequest, userResponse.getUsername());
-         urlService.addNewUrl(thirdUrlRequest, userResponse.getUsername());
-         urlService.addNewUrl(fourthUrlRequest, secondUserUsername);
-         urlService.addNewUrl(fifthUrlRequest,secondUserUsername);
-         urlService.addNewUrl(sixthUrlRequest,secondUserUsername);
-         urlService.addNewUrl(seventhUrlRequest,secondUserUsername);
+        urlService.addNewUrl(firstUrlRequest, userResponse.getUsername());
+        urlService.addNewUrl(secondUrlRequest, userResponse.getUsername());
+        urlService.addNewUrl(thirdUrlRequest, userResponse.getUsername());
+        urlService.addNewUrl(fourthUrlRequest, secondUserUsername);
+        urlService.addNewUrl(fifthUrlRequest, secondUserUsername);
+        urlService.addNewUrl(sixthUrlRequest, secondUserUsername);
+        urlService.addNewUrl(seventhUrlRequest, secondUserUsername);
 
-        Set<Url> firstUserUrlSet = urlService.searchUrlByUrlUsername(login.getUserName(),"ademiju");
-        Set<Url> secondUserUrlSet = urlService.searchUrlByUrlUsername(login2.getUserName(),"ademiju");
+        Set<Url> firstUserUrlSet = urlService.searchUrlByUrlUsername(login.getUserName(), "ademiju");
+        Set<Url> secondUserUrlSet = urlService.searchUrlByUrlUsername(login2.getUserName(), "ademiju");
 
-        assertThat(firstUserUrlSet.size(),is(2));
-        assertThat(secondUserUrlSet.size(),is(3));
+        assertThat(firstUserUrlSet.size(), is(2));
+        assertThat(secondUserUrlSet.size(), is(3));
 
 
+    }
+        @Test
+        public void find_UrlDetails_WithUsernameThatDoesNotExist_ThrowsExceptionTest() {
+            userService.createNewUserAccount(firstRequest);
+            LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
+            userService.userLogin(login);
+            assertThatThrownBy(() -> urlService.searchUrlByUrlUsername(login.getUserName(), "Increase")).isInstanceOf(UrlDoesNotExistException.class).hasMessage("No url with this username found");
 
+        }
 //        Url firstUrl = new Url();
 //        Url secondUrl = new Url();
 //        Url thirdUrl = new Url();
@@ -161,9 +169,6 @@ class UrlServiceImplTest {
 //        assertThat(firstUrl.getUrlAddress(),is(firstUrlRequest.getUrlAddress()));
 //        assertThat(secondUrl.getUrlAddress(),is(secondUrlRequest.getUrlAddress()));
 //        assertThat(thirdUrl.getUrlAddress(),is(thirdUrlRequest.getUrlAddress()));
-
-
-    }
 @AfterEach
 void tearDown(){
     urlRepository.deleteAll();

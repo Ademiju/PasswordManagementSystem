@@ -17,7 +17,8 @@ public interface UserService {
     String updateAccountPassword(PasswordUpdateRequest passwordUpdateRequest, String username);
     User findUserAccountByUsername(String username);
     String deleteUserAccount(DeleteAccountRequest deleteAccountRequest);
-    String login(LoginRequest loginRequest);
+    String userLogin(LoginRequest loginRequest);
+    String userLogout(String username);
 
 
 

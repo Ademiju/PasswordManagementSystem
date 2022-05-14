@@ -1,14 +1,8 @@
 package africa.semicolon.PasswordManager.controllers;
 
-import africa.semicolon.PasswordManager.dtos.requests.AccountRequest;
-import africa.semicolon.PasswordManager.dtos.requests.LoginRequest;
-import africa.semicolon.PasswordManager.dtos.requests.PasswordUpdateRequest;
-import africa.semicolon.PasswordManager.dtos.requests.UpdateAccountRequest;
+import africa.semicolon.PasswordManager.dtos.requests.*;
 import africa.semicolon.PasswordManager.dtos.responses.ApiResponse;
-import africa.semicolon.PasswordManager.exceptions.AlreadyExistException;
-import africa.semicolon.PasswordManager.exceptions.IncorrectDetailsException;
-import africa.semicolon.PasswordManager.exceptions.PasswordManagerException;
-import africa.semicolon.PasswordManager.exceptions.UserNotFoundException;
+import africa.semicolon.PasswordManager.exceptions.*;
 import africa.semicolon.PasswordManager.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,6 +24,26 @@ public class UserController {
         }
     }
 
+    @PostMapping("/login")
+
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest){
+        try{
+           return new ResponseEntity<>(userService.userLogin(loginRequest),HttpStatus.FOUND);
+        }catch (UserNotFoundException  | IncorrectDetailsException error){
+            return new ResponseEntity<>(new ApiResponse(false, error.getMessage()),HttpStatus.BAD_REQUEST);
+
+        }
+    }
+
+    @GetMapping("/logout/{username}")
+
+    public ResponseEntity<?> logout(@PathVariable String username){
+        try{
+            return new ResponseEntity<>(userService.userLogout(username),HttpStatus.OK);
+        }catch (UserNotFoundException  error){
+            return new ResponseEntity<>(new ApiResponse(false, error.getMessage()),HttpStatus.BAD_REQUEST);
+        }
+    }
     @GetMapping("/search/{username}")
     public ResponseEntity<?> findUserByUsername(@PathVariable String username){
         try{
@@ -47,7 +61,24 @@ public class UserController {
         }catch (AlreadyExistException | IncorrectDetailsException error){
             return new ResponseEntity<>(new ApiResponse(false,error.getMessage()),HttpStatus.BAD_REQUEST);
         }
+    }
 
+    @PatchMapping("/updatepassword/{username}")
+    public ResponseEntity<?> updateUserPassword(@RequestBody PasswordUpdateRequest passwordUpdateRequest, @PathVariable String username) {
+        try{
+            return new ResponseEntity<>(userService.updateAccountPassword(passwordUpdateRequest, username),HttpStatus.CREATED);
+        }catch (UserNotFoundException | UnMatchingDetailsException error){
+            return new ResponseEntity<>(new ApiResponse(false,error.getMessage()),HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @DeleteMapping("/delete/{username}")
+    public ResponseEntity<?> deleteUser(@RequestBody DeleteAccountRequest deleteAccountRequest, @PathVariable String username) {
+        try{
+            return new ResponseEntity<>(userService.deleteUserAccount(deleteAccountRequest),HttpStatus.CREATED);
+        }catch (UserNotFoundException | UnMatchingDetailsException error){
+            return new ResponseEntity<>(new ApiResponse(false,error.getMessage()),HttpStatus.BAD_REQUEST);
+        }
     }
 
 

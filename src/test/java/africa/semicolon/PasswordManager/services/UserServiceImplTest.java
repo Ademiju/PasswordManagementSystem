@@ -77,7 +77,7 @@ class UserServiceImplTest {
         service.createNewUserAccount(firstRequest);
         service.createNewUserAccount(secondRequest);
         LoginRequest loginRequest = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        String message = service.login(loginRequest);
+        String message = service.userLogin(loginRequest);
         assertThat(message,is("Successfully Logged In"));
     }
     @Test
@@ -85,25 +85,25 @@ class UserServiceImplTest {
         service.createNewUserAccount(firstRequest);
         service.createNewUserAccount(secondRequest);
         LoginRequest loginRequest = LoginRequest.builder().userName("Miju").password("Ademiju1#").build();
-        assertThatThrownBy(()->service.login(loginRequest)).isInstanceOf(IncorrectDetailsException.class).hasMessage("Incorrect Login details");
+        assertThatThrownBy(()->service.userLogin(loginRequest)).isInstanceOf(IncorrectDetailsException.class).hasMessage("Incorrect Login details");
     }
     @Test
     public void userCanUpdate_AccountDetailsTest(){
         service.createNewUserAccount(firstRequest);
         service.createNewUserAccount(secondRequest);
         LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        service.login(login);
+        service.userLogin(login);
         UpdateAccountRequest accountUpdateRequest = UpdateAccountRequest.builder().emailAddress("Ademiju@email.com").userName("Adelove").firstName("Ademijuwonlo").lastName("").phoneNumber("08156454321").build();
         UpdateResponse updateResponse = service.updateUserAccountDetails(accountUpdateRequest, login.getUserName());
 
         assertThat(updateResponse.getUserName(),is(accountUpdateRequest.getUserName()));
         assertThat(updateResponse.getEmailAddress(),is(accountUpdateRequest.getEmailAddress()));
         assertThat(updateResponse.getFirstName(),is(accountUpdateRequest.getFirstName()));
-        assertThat(updateResponse.getLastName(), is(accountUpdateRequest.getLastName()));
+        assertThat(updateResponse.getLastName(), is(firstRequest.getLastName()));
         assertThat(updateResponse.getPhoneNumber(),is(accountUpdateRequest.getPhoneNumber()));
 
         LoginRequest loginWithUpdatedUserName = LoginRequest.builder().userName("Adelove").password("Ademiju1").build();
-        String message = service.login(loginWithUpdatedUserName);
+        String message = service.userLogin(loginWithUpdatedUserName);
         assertThat(message,is("Successfully Logged In"));
 
 
@@ -113,7 +113,7 @@ class UserServiceImplTest {
         UserResponse userResponse = service.createNewUserAccount(firstRequest);
         service.createNewUserAccount(secondRequest);
         LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        service.login(login);
+        service.userLogin(login);
         UpdateAccountRequest accountUpdateRequest = UpdateAccountRequest.builder().userName("").emailAddress("").lastName("JohnDoe").firstName("Ademiju").phoneNumber("08156454321").build();
         UpdateResponse updateResponse = service.updateUserAccountDetails(accountUpdateRequest,login.getUserName());
         assertThat(updateResponse.getUserName(),is(userResponse.getUsername()));
@@ -125,17 +125,17 @@ class UserServiceImplTest {
     }
     @Test
     public void userCanUpdateAnyFieldAsTheyChooseTest(){
-        UserResponse userResponse = service.createNewUserAccount(firstRequest);
+        service.createNewUserAccount(firstRequest);
         service.createNewUserAccount(secondRequest);
         LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        service.login(login);
-        UpdateAccountRequest accountUpdateRequest = UpdateAccountRequest.builder().userName("").emailAddress("ademijuwon@email.com").lastName("JohnDoe").firstName("Ademiju").phoneNumber("08165563818").build();
+        service.userLogin(login);
+        UpdateAccountRequest accountUpdateRequest = UpdateAccountRequest.builder().userName("").emailAddress("ademijuwon@email.com").lastName("JohnDoe").firstName("").phoneNumber("").build();
         UpdateResponse updateResponse = service.updateUserAccountDetails(accountUpdateRequest, login.getUserName());
-        assertThat(updateResponse.getUserName(),is(userResponse.getUsername()));
+        assertThat(updateResponse.getUserName(),is(login.getUserName()));
         assertThat(updateResponse.getEmailAddress(),is(accountUpdateRequest.getEmailAddress()));
-        assertThat(updateResponse.getFirstName(),is(accountUpdateRequest.getFirstName()));
+        assertThat(updateResponse.getFirstName(),is(firstRequest.getFirstName()));
         assertThat(updateResponse.getLastName(), is(accountUpdateRequest.getLastName()));
-        assertThat(updateResponse.getPhoneNumber(),is(accountUpdateRequest.getPhoneNumber()));
+        assertThat(updateResponse.getPhoneNumber(),is(firstRequest.getPhoneNumber()));
 
     }
 
@@ -144,7 +144,7 @@ class UserServiceImplTest {
         service.createNewUserAccount(firstRequest);
         service.createNewUserAccount(secondRequest);
         LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        service.login(login);
+        service.userLogin(login);
         UpdateAccountRequest accountUpdateRequest = UpdateAccountRequest.builder().emailAddress("Ademiju@email.com").userName("Juwon").phoneNumber("08156454321").build();
         assertThatThrownBy(()-> service.updateUserAccountDetails(accountUpdateRequest, login.getUserName())).isInstanceOf(AlreadyExistException.class).hasMessage("Username Already Exist");
 
@@ -154,7 +154,7 @@ class UserServiceImplTest {
         service.createNewUserAccount(firstRequest);
         service.createNewUserAccount(secondRequest);
         LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        service.login(login);
+        service.userLogin(login);
         UpdateAccountRequest accountUpdateRequest = UpdateAccountRequest.builder().emailAddress("tester@email.com").userName("Ademiju").phoneNumber("08156454321").build();
         assertThatThrownBy(()-> service.updateUserAccountDetails(accountUpdateRequest,login.getUserName())).isInstanceOf(AlreadyExistException.class).hasMessage("Email address Already Exist");
 
@@ -165,11 +165,11 @@ class UserServiceImplTest {
         service.createNewUserAccount(secondRequest);
         PasswordUpdateRequest passwordUpdateRequest = PasswordUpdateRequest.builder().oldPassword("Ademiju1").newPassword("Ademijuwonlo#").confirmNewPassword("Ademijuwonlo#").build();
         LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        service.login(login);
+        service.userLogin(login);
         String message = service.updateAccountPassword(passwordUpdateRequest,login.getUserName());
         assertThat(message,is("Password Successfully Updated"));
         LoginRequest loginWithUpdatedPassword = LoginRequest.builder().userName("Miju").password("Ademijuwonlo#").build();
-        service.login(loginWithUpdatedPassword);
+        service.userLogin(loginWithUpdatedPassword);
         assertThat(message,is("Password Successfully Updated"));
 
     }
@@ -180,7 +180,7 @@ class UserServiceImplTest {
         service.createNewUserAccount(secondRequest);
         PasswordUpdateRequest passwordUpdateRequest = PasswordUpdateRequest.builder().oldPassword("Ademiju").newPassword("Ademijuwonlo#").confirmNewPassword("Ademijuwonlo#").build();
         LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        service.login(login);
+        service.userLogin(login);
         assertThatThrownBy(()->service.updateAccountPassword(passwordUpdateRequest,login.getUserName())).isInstanceOf(UnMatchingDetailsException.class).hasMessage("Incorrect password");
 
     }
@@ -190,7 +190,7 @@ class UserServiceImplTest {
         service.createNewUserAccount(secondRequest);
         PasswordUpdateRequest passwordUpdateRequest = PasswordUpdateRequest.builder().oldPassword("Ademiju1").newPassword("Ademijuwonlo").confirmNewPassword("Ademijuwonlo#").build();
         LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
-        service.login(login);
+        service.userLogin(login);
 
         assertThatThrownBy(()->service.updateAccountPassword(passwordUpdateRequest,login.getUserName())).isInstanceOf(UnMatchingDetailsException.class).hasMessage("New Password Does Not Match");
 

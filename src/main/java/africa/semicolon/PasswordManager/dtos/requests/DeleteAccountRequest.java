@@ -1,12 +1,12 @@
 package africa.semicolon.PasswordManager.dtos.requests;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DeleteAccountRequest {
     private String username;
     private String emailAddress;
