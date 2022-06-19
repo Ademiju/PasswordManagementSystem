@@ -68,7 +68,7 @@ public class UserController {
     public ResponseEntity<?> updateUserPassword(@RequestBody PasswordUpdateRequest passwordUpdateRequest, @PathVariable String username) {
         try{
             return new ResponseEntity<>(userService.updateAccountPassword(passwordUpdateRequest, username),HttpStatus.CREATED);
-        }catch (UserNotFoundException | UnMatchingDetailsException error){
+        }catch (AlreadyExistException | UserNotFoundException | UnMatchingDetailsException error){
             return new ResponseEntity<>(new ApiResponse(false,error.getMessage()),HttpStatus.BAD_REQUEST);
         }
     }

@@ -84,7 +84,11 @@ public class UserServiceImpl implements UserService {
         if (user.isLoggedIn()) {
             if (passwordUpdateRequest.getOldPassword().equals(user.getPassword())) {
                 if (passwordUpdateRequest.getNewPassword().equals(passwordUpdateRequest.getConfirmNewPassword())) {
-                    user.setPassword(passwordUpdateRequest.getNewPassword());
+                    if(!(passwordUpdateRequest.getOldPassword().equals(passwordUpdateRequest.getNewPassword()))){
+                        user.setPassword(passwordUpdateRequest.getNewPassword());
+                    }else{
+                        throw new AlreadyExistException("New Password cannot be the same as Old Password...Use a new password and try Again!!!");
+                    }
                 } else {
                     throw new UnMatchingDetailsException("New Password Does Not Match");
                 }
@@ -92,7 +96,7 @@ public class UserServiceImpl implements UserService {
                 throw new UnMatchingDetailsException("Incorrect password");
             }
         } else {
-            throw new IncorrectDetailsException("Incorrect Login Details");
+            throw new IncorrectDetailsException("You must be logged in");
         }
 
         repository.save(user);
