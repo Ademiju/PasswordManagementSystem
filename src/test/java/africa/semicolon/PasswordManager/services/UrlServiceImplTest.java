@@ -3,14 +3,14 @@ package africa.semicolon.PasswordManager.services;
 import africa.semicolon.PasswordManager.datas.models.Url;
 import africa.semicolon.PasswordManager.datas.repositories.UrlRepository;
 import africa.semicolon.PasswordManager.datas.repositories.UserRepository;
-import africa.semicolon.PasswordManager.dtos.requests.AccountRequest;
-import africa.semicolon.PasswordManager.dtos.requests.LoginRequest;
-import africa.semicolon.PasswordManager.dtos.requests.UrlRequest;
+import africa.semicolon.PasswordManager.dtos.requests.*;
+import africa.semicolon.PasswordManager.dtos.responses.UpdateResponse;
 import africa.semicolon.PasswordManager.dtos.responses.UrlResponse;
 import africa.semicolon.PasswordManager.dtos.responses.UserResponse;
 import africa.semicolon.PasswordManager.exceptions.IncorrectDetailsException;
 import africa.semicolon.PasswordManager.exceptions.UrlDoesNotExistException;
 import africa.semicolon.PasswordManager.exceptions.UserNotFoundException;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Set;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.is;
@@ -41,8 +41,6 @@ class UrlServiceImplTest {
 
     @Autowired
     UserService userService;
-
-    ModelMapper modelMapper = new ModelMapper();
 
     AccountRequest firstRequest;
     AccountRequest secondRequest;
@@ -114,12 +112,12 @@ class UrlServiceImplTest {
         UrlResponse firstUrlResponse2 = urlService.addNewUrl(fourthUrlRequest, secondUserUsername);
         UrlResponse secondUrlResponse2 = urlService.addNewUrl(fifthUrlRequest,secondUserUsername);
         UrlResponse thirdUrlResponse2 = urlService.addNewUrl(sixthUrlRequest,secondUserUsername);
-        assertThat(firstUrlResponse.getUrlOwner().getUsername(),is(firstUserUsername));
-        assertThat(secondUrlResponse.getUrlOwner().getUsername(),is(firstUserUsername));
-        assertThat(thirdUrlResponse.getUrlOwner().getUsername(),is(firstUserUsername));
-        assertThat(firstUrlResponse2.getUrlOwner().getUsername(),is(secondUserUsername));
-        assertThat(secondUrlResponse2.getUrlOwner().getUsername(),is(secondUserUsername));
-        assertThat(thirdUrlResponse2.getUrlOwner().getUsername(),is(secondUserUsername));
+        assertThat(firstUrlResponse.getUrlOwner(),is(firstUserUsername));
+        assertThat(secondUrlResponse.getUrlOwner(),is(firstUserUsername));
+        assertThat(thirdUrlResponse.getUrlOwner(),is(firstUserUsername));
+        assertThat(firstUrlResponse2.getUrlOwner(),is(secondUserUsername));
+        assertThat(secondUrlResponse2.getUrlOwner(),is(secondUserUsername));
+        assertThat(thirdUrlResponse2.getUrlOwner(),is(secondUserUsername));
 
     }
 
@@ -143,12 +141,16 @@ class UrlServiceImplTest {
         urlService.addNewUrl(sixthUrlRequest, secondUserUsername);
         urlService.addNewUrl(seventhUrlRequest, secondUserUsername);
 
-        Set<Url> firstUserUrlSet = urlService.searchUrlByUrlUsername(login.getUserName(), "ademiju");
-        Set<Url> secondUserUrlSet = urlService.searchUrlByUrlUsername(login2.getUserName(), "ademiju");
+        List<Url> firstUserUrlList = urlService.searchUrlByUrlUsername(login.getUserName(), "ademiju");
+        List<Url> secondUserUrlList = urlService.searchUrlByUrlUsername(login2.getUserName(), "ademiju");
 
-        assertThat(firstUserUrlSet.size(), is(2));
-        assertThat(secondUserUrlSet.size(), is(3));
-
+        assertThat(firstUserUrlList.size(), is(2));
+        assertThat(secondUserUrlList.size(), is(3));
+        assertThat(firstUserUrlList.get(0).getUrlAddress(), is(firstUrlRequest.getUrlAddress()));
+        assertThat(firstUserUrlList.get(1).getUrlAddress(), is(thirdUrlRequest.getUrlAddress()));
+        assertThat(secondUserUrlList.get(0).getUrlAddress(), is(fourthUrlRequest.getUrlAddress()));
+        assertThat(secondUserUrlList.get(1).getUrlAddress(), is(sixthUrlRequest.getUrlAddress()));
+        assertThat(secondUserUrlList.get(2).getUrlAddress(),is(seventhUrlRequest.getUrlAddress()));
 
     }
         @Test
@@ -159,19 +161,89 @@ class UrlServiceImplTest {
             assertThatThrownBy(() -> urlService.searchUrlByUrlUsername(login.getUserName(), "Increase")).isInstanceOf(UrlDoesNotExistException.class).hasMessage("No url with this username found");
 
         }
-//        Url firstUrl = new Url();
-//        Url secondUrl = new Url();
-//        Url thirdUrl = new Url();
-//        modelMapper.map(firstUrlResponse,firstUrl);
-//        modelMapper.map(secondUrlResponse, secondUrl);
-//        modelMapper.map(thirdUrlResponse,thirdUrl);
-//        assertThat(user.getUrls().size(),is(3));
-//        assertThat(firstUrl.getUrlAddress(),is(firstUrlRequest.getUrlAddress()));
-//        assertThat(secondUrl.getUrlAddress(),is(secondUrlRequest.getUrlAddress()));
-//        assertThat(thirdUrl.getUrlAddress(),is(thirdUrlRequest.getUrlAddress()));
-@AfterEach
-void tearDown(){
-    urlRepository.deleteAll();
-    userRepository.deleteAll();
+
+        @Test
+        public void find_UrlDetails_WithUrlAddressTest(){
+            UserResponse userResponse = userService.createNewUserAccount(firstRequest);
+            LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
+            userService.userLogin(login);
+            urlService.addNewUrl(firstUrlRequest, userResponse.getUsername());
+            urlService.addNewUrl(secondUrlRequest, userResponse.getUsername());
+            List<Url> firstUserUrlList = urlService.searchUrlByUrlAddress(login.getUserName(), "www.facebook.com");
+            assertThat(firstUserUrlList.get(0).getUsername(), is(firstUrlRequest.getUsername()));
+            assertThat(firstUserUrlList.get(0).getPassword(), is(firstUrlRequest.getPassword()));
+            assertThat(firstUserUrlList.get(0).getEmailAddress(), is(firstUrlRequest.getEmailAddress()));
+
+        }
+        @Test
+        public void allUrlCanBeSearchedTest(){
+            UserResponse userResponse = userService.createNewUserAccount(firstRequest);
+            LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
+            userService.userLogin(login);
+            urlService.addNewUrl(firstUrlRequest, userResponse.getUsername());
+            urlService.addNewUrl(secondUrlRequest, userResponse.getUsername());
+            urlService.addNewUrl(thirdUrlRequest, userResponse.getUsername());
+            assertThat(urlService.findAllUrl(userResponse.getUsername()).size(),is(3));
+
+        }
+        @Test
+        public void urlDetailsCanBeUpdatedTest(){
+            UserResponse userResponse = userService.createNewUserAccount(firstRequest);
+            LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
+            userService.userLogin(login);
+            UrlResponse urlResponse = urlService.addNewUrl(firstUrlRequest, userResponse.getUsername());
+            UrlUpdateRequest urlUpdateRequest = UrlUpdateRequest.builder().urlAddress("www.facebuk.com").emailAddress("freemail@email.com").firstName("").lastName("").username("Ademiju").password("Juwonlo*13").build();
+            UpdateResponse updateResponse = urlService.updateUrlDetails(urlUpdateRequest,urlResponse.getId());
+            assertThat(updateResponse.getUrlAddress(),is(urlUpdateRequest.getUrlAddress()));
+            assertThat(updateResponse.getEmailAddress(),is(urlUpdateRequest.getEmailAddress()));
+            assertThat(updateResponse.getPassword(),is(urlUpdateRequest.getPassword()));
+            assertThat(updateResponse.getUserName(),is(urlUpdateRequest.getUsername()));
+            assertThat(updateResponse.getFirstName(),is(firstUrlRequest.getFirstName()));
+            assertThat(updateResponse.getLastName(),is(firstUrlRequest.getLastName()));
+        }
+
+        @Test
+        public void urlCanBeDeletedTest(){
+            UserResponse userResponse = userService.createNewUserAccount(firstRequest);
+            LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
+            userService.userLogin(login);
+            urlService.addNewUrl(firstUrlRequest, userResponse.getUsername());
+            UrlResponse urlResponse = urlService.addNewUrl(secondUrlRequest, userResponse.getUsername());
+            urlService.addNewUrl(thirdUrlRequest, userResponse.getUsername());
+
+            UrlDeleteRequest urlDeleteRequest = UrlDeleteRequest.builder().urlAddress("www.twitter.com").userPassword("Ademiju1").build();
+            assertThat(urlService.deleteUrl(urlDeleteRequest,urlResponse.getId()),is("Delete Successful"));
+
+        }
+    @Test
+    public void urlDeleteWithWrongPasswordThrowsExceptionTest(){
+        UserResponse userResponse = userService.createNewUserAccount(firstRequest);
+        LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
+        userService.userLogin(login);
+        urlService.addNewUrl(firstUrlRequest, userResponse.getUsername());
+        UrlResponse urlResponse = urlService.addNewUrl(secondUrlRequest, userResponse.getUsername());
+        urlService.addNewUrl(thirdUrlRequest, userResponse.getUsername());
+
+        UrlDeleteRequest urlDeleteRequest = UrlDeleteRequest.builder().urlAddress("www.twitter.com").userPassword("Ademiju").build();
+        assertThatThrownBy(()->urlService.deleteUrl(urlDeleteRequest,urlResponse.getId())).isInstanceOf(IncorrectDetailsException.class).hasMessage("Incorrect Password!! Failed to delete");
+
+    }
+    @Test
+    public void deleteUrlThatDoesNotExistThrowsExceptionTest(){
+        UserResponse userResponse = userService.createNewUserAccount(firstRequest);
+        LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
+        userService.userLogin(login);
+        urlService.addNewUrl(firstUrlRequest, userResponse.getUsername());
+        UrlResponse urlResponse = urlService.addNewUrl(secondUrlRequest, userResponse.getUsername());
+        urlService.addNewUrl(thirdUrlRequest, userResponse.getUsername());
+
+        UrlDeleteRequest urlDeleteRequest = UrlDeleteRequest.builder().urlAddress("www.instagram.com").userPassword("Ademiju1").build();
+        assertThatThrownBy(()->urlService.deleteUrl(urlDeleteRequest,urlResponse.getId())).isInstanceOf(UrlDoesNotExistException.class).hasMessage("Url does not exist");
+
+    }
+        @AfterEach
+        void tearDown(){
+            urlRepository.deleteAll();
+            userRepository.deleteAll();
 }
 }

@@ -9,9 +9,10 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UrlResponse {
+    private String id;
     private String urlAddress;
     private String username;
     private String emailAddress;
     private String password;
-    private UserResponse urlOwner;
+    private String urlOwner;
 }

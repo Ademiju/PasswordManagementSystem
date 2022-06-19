@@ -1,10 +1,7 @@
 package africa.semicolon.PasswordManager.datas.models;
 
 import africa.semicolon.PasswordManager.dtos.responses.UserResponse;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -28,8 +25,8 @@ public class Url {
     private String password;
     private String firstName;
     private String lastName;
-    @DBRef @NonNull
-    private UserResponse urlOwner;
+    @NonNull
+    private String urlOwner;
 
 
 

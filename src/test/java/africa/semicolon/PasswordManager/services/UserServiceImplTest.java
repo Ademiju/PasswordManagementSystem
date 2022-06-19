@@ -214,10 +214,12 @@ class UserServiceImplTest {
     public void userCanBeDeletedByUsernameTest(){
         service.createNewUserAccount(firstRequest);
         service.createNewUserAccount(secondRequest);
-        DeleteAccountRequest accountRequest = DeleteAccountRequest.builder().username("Juwon").emailAddress("tester@email.com").password("Ademiju1#").confirmPassword("Ademiju1#").build();
+        LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
+        service.userLogin(login);
+        DeleteAccountRequest accountRequest = DeleteAccountRequest.builder().username("Miju").emailAddress("test@email.com").password("Ademiju1").confirmPassword("Ademiju1").build();
         String message = service.deleteUserAccount(accountRequest);
-        assertThatThrownBy(()->service.findUserAccountByUsername("Juwon")).isInstanceOf(UserNotFoundException.class).hasMessage("User does not exist");
         assertThat(message, is( "User Account successfully Deleted"));
+        assertThatThrownBy(()->service.findUserAccountByUsername("Miju")).isInstanceOf(UserNotFoundException.class).hasMessage("User does not exist");
 
     }
 
@@ -225,8 +227,24 @@ class UserServiceImplTest {
     public void deleteUserWithWrongUserDetailsThrowExceptionTest(){
         service.createNewUserAccount(firstRequest);
         service.createNewUserAccount(secondRequest);
-        DeleteAccountRequest accountRequest = DeleteAccountRequest.builder().username("Juwon").emailAddress("teste@email.com").password("Ademiju1#").confirmPassword("Ademiju1#").build();
-        assertThatThrownBy(()->service.deleteUserAccount(accountRequest)).isInstanceOf(IncorrectDetailsException.class).hasMessage("Incorrect user details!!! Failed To Delete");
+        LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
+        service.userLogin(login);
+        DeleteAccountRequest accountRequest = DeleteAccountRequest.builder().username("Miju").emailAddress("teste@email.com").password("Ademiju1").confirmPassword("Ademiju1").build();
+        assertThatThrownBy(()->service.deleteUserAccount(accountRequest)).isInstanceOf(IncorrectDetailsException.class).hasMessage("Incorrect Email address");
+
+    }
+    @Test
+    public void userCanLogoutTest(){
+        UserResponse userResponse = service.createNewUserAccount(firstRequest);
+        LoginRequest login = LoginRequest.builder().userName("Miju").password("Ademiju1").build();
+        service.userLogin(login);
+        assertThat(service.userLogout(userResponse.getUsername()),is("Successfully logged out"));
+
+    }
+    @Test
+    public void logoutWhenUserIsNotLoggedInTest(){
+        UserResponse userResponse = service.createNewUserAccount(firstRequest);
+        assertThat(service.userLogout(userResponse.getUsername()),is("You must be logged in"));
 
     }
 

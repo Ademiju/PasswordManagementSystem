@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.List;
 import java.util.Set;
 
 @Document("User")
@@ -25,7 +27,7 @@ public class User {
     private String phoneNumber;
     @NonNull
     private String emailAddress;
-    private Set<Url> urls;
+    private List<Url> urls;
     private boolean isLoggedIn;
 
 }

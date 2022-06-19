@@ -11,7 +11,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -34,10 +34,11 @@ public class UserServiceImpl implements UserService {
         if (optionalUser.isPresent()) throw new PasswordManagerException("Email address already exist");
         User userAccount = new User();
         modelMapper.map(accountRequest, userAccount);
-        userAccount.setUrls(new HashSet<>());
+        userAccount.setUrls(new ArrayList<>());
         repository.save(userAccount);
         UserResponse userResponse = new UserResponse();
         modelMapper.map(userAccount, userResponse);
+        userResponse.setMessage("Registration Successful");
         return userResponse;
     }
 
@@ -87,12 +88,9 @@ public class UserServiceImpl implements UserService {
                 } else {
                     throw new UnMatchingDetailsException("New Password Does Not Match");
                 }
-
             } else {
                 throw new UnMatchingDetailsException("Incorrect password");
             }
-
-
         } else {
             throw new IncorrectDetailsException("Incorrect Login Details");
         }
@@ -117,10 +115,10 @@ public class UserServiceImpl implements UserService {
                         repository.deleteByUserName(deleteAccountRequest.getUsername());
                         return "User Account successfully Deleted";
 
-                    }
-                }
+                    }throw  new IncorrectDetailsException("Incorrect Email address");
+                }throw new IncorrectDetailsException("Incorrect Password");
             }
-            throw new IncorrectDetailsException("Incorrect user details!!! Failed To Delete");
+            throw new UnMatchingDetailsException("Password Mismatch!!! Failed To Delete");
         } return "You must be logged in";
     }
 
@@ -140,9 +138,7 @@ public class UserServiceImpl implements UserService {
         if (user.isLoggedIn()) {
             user.setLoggedIn(false);
             repository.save(user);
-            return "Successfully logged out";
-        }
-        return "You must be logged in";
-    }
+            return "Successfully logged out";}
+        return "You must be logged in";}
 
 }

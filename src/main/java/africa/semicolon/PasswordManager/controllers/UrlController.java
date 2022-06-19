@@ -1,11 +1,9 @@
 package africa.semicolon.PasswordManager.controllers;
 
 import africa.semicolon.PasswordManager.datas.repositories.UrlRepository;
-import africa.semicolon.PasswordManager.dtos.requests.UrlRequest;
+import africa.semicolon.PasswordManager.dtos.requests.*;
 import africa.semicolon.PasswordManager.dtos.responses.ApiResponse;
-import africa.semicolon.PasswordManager.exceptions.IncorrectDetailsException;
-import africa.semicolon.PasswordManager.exceptions.UrlDoesNotExistException;
-import africa.semicolon.PasswordManager.exceptions.UserNotFoundException;
+import africa.semicolon.PasswordManager.exceptions.*;
 import africa.semicolon.PasswordManager.services.UrlService;
 import africa.semicolon.PasswordManager.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,4 +49,23 @@ public class UrlController {
         }
 
     }
+
+    @PatchMapping("/update/{urlId}")
+    public ResponseEntity<?> updateUrlDetails(@RequestBody UrlUpdateRequest urlUpdateRequest, @PathVariable String urlId) {
+        try{
+            return new ResponseEntity<>(urlService.updateUrlDetails(urlUpdateRequest, urlId),HttpStatus.CREATED);
+        }catch (UrlDoesNotExistException | IncorrectDetailsException | UserNotFoundException error){
+            return new ResponseEntity<>(new ApiResponse(false,error.getMessage()),HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @DeleteMapping("/delete/{urlId}")
+    public ResponseEntity<?> deleteUrl(@RequestBody UrlDeleteRequest urlDeleteRequest, @PathVariable String urlId) {
+        try{
+            return new ResponseEntity<>(urlService.deleteUrl(urlDeleteRequest, urlId),HttpStatus.CREATED);
+        }catch (UrlDoesNotExistException | IncorrectDetailsException error){
+            return new ResponseEntity<>(new ApiResponse(false,error.getMessage()),HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }
