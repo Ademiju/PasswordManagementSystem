@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-@Slf4j
+
 @Service
 public class UrlServiceImpl implements UrlService{
     private ModelMapper modelMapper = new ModelMapper();
